@@ -1,6 +1,8 @@
 import fetch from "node-fetch";
 import fetchJsonp from "fetch-jsonp";
-import { DOMParser } from "xmldom";
+import xmldom from "@xmldom/xmldom";
+
+const DOMParser = xmldom.DOMParser;
 
 let CORS_PROXY = "https://iajs-cors.rchrd2.workers.dev";
 
