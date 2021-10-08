@@ -44,6 +44,6 @@
   },
   "files": [
     "dist",
-    "types.d.ts"
+    "index.d.ts"
   ]
 }
