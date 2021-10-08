@@ -1,6 +1,6 @@
 {
   "name": "@chlodalejandro/iajs",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Internet Archive JavaScript Client",
   "main": "dist/ia.cjs.js",
   "module": "dist/ia.esm.js",
@@ -43,6 +43,7 @@
     "rollup": "^1.29.0"
   },
   "files": [
-    "dist", "types.d.ts"
+    "dist",
+    "types.d.ts"
   ]
 }
