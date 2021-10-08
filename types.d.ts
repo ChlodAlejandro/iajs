@@ -1,4 +1,4 @@
-declare module "iajs" {
+declare module "@chlodalejandro/iajs" {
     interface LoginResult {
         success: boolean,
         values: {
@@ -39,7 +39,7 @@ declare module "iajs" {
     }
 
     class Auth {
-        new();
+        constructor();
         login(email: string, password: string): Promise<LoginResponse>;
         fromS3(access: string, secret: string, newAuth?: LoginResult): Promise<AWSLoginResult>;
         fromCookies(loggedInSig: string, loggedInUser: string, newAuth?: LoginResult) : Promise<LoginResult>;
@@ -50,7 +50,7 @@ declare module "iajs" {
     }
 
     class FavoritesAPI {
-        new();
+        constructor();
         get(params : { screenname?: string, auth?: LoginResult }) : Promise<any>;
         add(params? : { identifier?: string, comments?: string, auth?: LoginResult }) : Promise<any>;
         remove(params? : { identifier?: string, auth?: LoginResult }) : Promise<any>;
@@ -58,13 +58,13 @@ declare module "iajs" {
     }
 
     class GifcitiesAPI {
-        new();
+        constructor();
         get(params?: { q : string[] }) : Promise<any>;
         search(params: { q : string[] }) : Promise<any>;
     }
 
     class MetadataAPI {
-        new();
+        constructor();
         get(params: { identifier: string, path?: string, auth?: LoginResult }) : Promise<any>;
         patch(params: {
             identifier?: string,
@@ -76,12 +76,12 @@ declare module "iajs" {
     }
 
     class RelatedAPI {
-        new();
+        constructor();
         get(params: { identifier: string }) : Promise<any>;
     }
 
     class ReviewsAPI {
-        new();
+        constructor();
         get(params?: { identifier: string }) : Promise<any>;
         add(params?: {
             identifier?: string,
@@ -93,7 +93,7 @@ declare module "iajs" {
     }
 
     class S3API {
-        new();
+        constructor();
         ls(params?: { identifier?: string, auth?: LoginResult }) : Promise<any>;
         createEmptyItem(params?: {
             identifier?: string,
@@ -119,7 +119,7 @@ declare module "iajs" {
     }
 
     class SearchAPI {
-        new();
+        constructor();
         get(params?: { q?: string, page?: number, fields?: string[], options?: any }) : Promise<any>;
         search(q : string) : Promise<any>;
         buildQueryFromObject(qObject : Record<string, any>);
@@ -128,12 +128,12 @@ declare module "iajs" {
     class SearchTextAPI {}
 
     class ViewsAPI {
-        new();
+        constructor();
         get(params?: { identifier?: string }) : Promise<any>;
     }
 
     class WaybackAPI {
-        new();
+        constructor();
         available(params?: { url?: string, timestamp?: string }) : Promise<any>;
         cdx(options?: Record<string, any>);
         savePageNow(params?: {
