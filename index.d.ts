@@ -1,4 +1,6 @@
 declare module "@chlodalejandro/iajs" {
+    import * as Stream from "stream";
+
     interface LoginResult {
         success: boolean,
         values: {
@@ -106,7 +108,7 @@ declare module "@chlodalejandro/iajs" {
         upload(params?: {
             identifier?: string,
             key?: string,
-            body?: string,
+            body?: string | Buffer | Blob | Stream,
             autocreate?: boolean,
             skipDerive?: boolean,
             testItem?: boolean,
