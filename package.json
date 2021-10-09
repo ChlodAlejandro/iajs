@@ -1,6 +1,6 @@
 {
   "name": "@chlodalejandro/iajs",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Internet Archive JavaScript Client",
   "main": "dist/ia.cjs.js",
   "module": "dist/ia.esm.js",
