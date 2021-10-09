@@ -113,8 +113,8 @@ declare module "@chlodalejandro/iajs" {
             skipDerive?: boolean,
             testItem?: boolean,
             keepOldVersions?: boolean,
-            metadata?: Record<string, any>,
-            headers?: Record<string, any>,
+            metadata?: Record<string, string | string[]>,
+            headers?: Record<string, string | number | boolean>,
             wait?: boolean,
             auth?: LoginResult
         }) : Promise<any>;
