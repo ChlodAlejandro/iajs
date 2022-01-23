@@ -25,7 +25,7 @@ function browser(name) {
       commonjs(),
       babel({
         babelHelpers: "bundled",
-        plugins: ["babel-plugin-async-to-promises"],
+        plugins: ["babel-plugin-transform-async-to-promises"],
       }),
     ],
   };

@@ -3358,9 +3358,69 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     XMLSerializer: XMLSerializer$2,
     DOMParser: DOMParser$1
   };
+
+  function _await(value, then, direct) {
+    if (direct) {
+      return then ? then(value) : value;
+    }
+
+    if (!value || !value.then) {
+      value = Promise.resolve(value);
+    }
+
+    return then ? value.then(then) : value;
+  }
+
   var DOMParser$2 = lib.DOMParser;
+
+  function _async(f) {
+    return function () {
+      for (var args = [], i = 0; i < arguments.length; i++) {
+        args[i] = arguments[i];
+      }
+
+      try {
+        return Promise.resolve(f.apply(this, args));
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    };
+  }
+
   var CORS_PROXY = "https://iajs-cors.rchrd2.workers.dev";
+
+  function _catch(body, recover) {
+    try {
+      var result = body();
+    } catch (e) {
+      return recover(e);
+    }
+
+    if (result && result.then) {
+      return result.then(void 0, recover);
+    }
+
+    return result;
+  }
+
+  function _call(body, then, direct) {
+    if (direct) {
+      return then ? then(body()) : body();
+    }
+
+    try {
+      var result = Promise.resolve(body());
+      return then ? result.then(then) : result;
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }
+
   var enc = encodeURIComponent;
+
+  function _continue(value, then) {
+    return value && value.then ? value.then(then) : then(value);
+  }
 
   var paramify = function paramify(obj) {
     return new URLSearchParams(obj).toString();
@@ -3382,14 +3442,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }
   };
 
-  var fetchJson = function fetchJson(url, options) {
-    return Promise.resolve().then(function () {
-      return fetch(url, options);
-    }).then(function (_resp) {
-      var res = _resp;
-      return res.json();
+  var fetchJson = _async(function (url, options) {
+    return _await(fetch(url, options), function (res) {
+      return _await(res.json());
     });
-  };
+  });
 
   var authToHeaderS3 = function authToHeaderS3(auth) {
     return auth.values.s3.access && auth.values.s3.secret ? {
@@ -3445,10 +3502,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     _createClass(Auth, [{
       key: "login",
       value: function login(email, password) {
-        var _this2 = this;
+        var _this = this;
 
-        return Promise.resolve().then(function () {
-          return Promise.resolve().then(function () {
+        return _call(function () {
+          return _await(_catch(function () {
             var fetchOptions = {
               method: "POST",
               body: "email=".concat(enc(email), "&password=").concat(enc(password)),
@@ -3456,69 +3513,61 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
                 "Content-Type": "application/x-www-form-urlencoded"
               }
             };
-            return fetch("".concat(_this2.XAUTH_BASE, "?op=login"), fetchOptions);
-          }).then(function (_resp) {
-            var response = _resp;
-            return response.json();
-          }).then(function (_resp) {
-            var data = _resp;
+            return _await(fetch("".concat(_this.XAUTH_BASE, "?op=login"), fetchOptions), function (response) {
+              return _await(response.json(), function (data) {
+                if (!data.success) {
+                  data.values = _objectSpread(_objectSpread({}, data.values), newEmptyAuth().values);
+                }
 
-            if (!data.success) {
-              data.values = _objectSpread(_objectSpread({}, data.values), newEmptyAuth().values);
-            }
-
-            return data;
-          })["catch"](function (e) {
+                return data;
+              });
+            });
+          }, function () {
             // TODO figure out syntax for catching error reponse
             return newEmptyAuth();
-          });
-        }).then(function () {});
+          }));
+        });
       }
     }, {
       key: "fromS3",
-      value: function fromS3(access, secret) {
-        var newAuth = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : newEmptyAuth();
-        return Promise.resolve().then(function () {
+      value: function fromS3(access, secret, newAuth) {
+        return _call(function () {
+          if (newAuth === undefined) newAuth = newEmptyAuth();
           newAuth.success = 1;
           newAuth.values.s3.access = access;
           newAuth.values.s3.secret = secret;
-          return fetchJson("https://s3.us.archive.org?check_auth=1", {
+          return _await(fetchJson("https://s3.us.archive.org?check_auth=1", {
             headers: authToHeaderS3(newAuth)
-          });
-        }).then(function (_resp) {
-          var info = _resp;
-          newAuth.values.email = info.username;
-          newAuth.values.itemname = info.itemname;
-          newAuth.values.screenname = info.screenname; // Note the auth object is missing cookie fields.
-          // It is still TBD if those are needed
+          }), function (info) {
+            newAuth.values.email = info.username;
+            newAuth.values.itemname = info.itemname;
+            newAuth.values.screenname = info.screenname; // Note the auth object is missing cookie fields.
+            // It is still TBD if those are needed
 
-          return newAuth;
+            return newAuth;
+          });
         });
       }
     }, {
       key: "fromCookies",
-      value: function fromCookies(loggedInSig, loggedInUser) {
-        var newAuth = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : newEmptyAuth();
+      value: function fromCookies(loggedInSig, loggedInUser, newAuth) {
+        var _this2 = this;
 
-        var _this4 = this;
-
-        return Promise.resolve().then(function () {
+        return _call(function () {
+          if (newAuth === undefined) newAuth = newEmptyAuth();
           newAuth.values.cookies["logged-in-sig"] = loggedInSig;
           newAuth.values.cookies["logged-in-user"] = loggedInUser;
-          return fetch(corsWorkAround("https://archive.org/account/s3.php?output_json=1"), {
+          return _await(fetch(corsWorkAround("https://archive.org/account/s3.php?output_json=1"), {
             headers: authToHeaderCookies(newAuth)
+          }), function (s3response) {
+            return _await(s3response.json(), function (s3) {
+              if (!s3.success) {
+                throw new Error();
+              }
+
+              return _await(_this2.fromS3(s3.key.s3accesskey, s3.key.s3secretkey, newAuth));
+            });
           });
-        }).then(function (_resp) {
-          var s3response = _resp;
-          return s3response.json();
-        }).then(function (_resp) {
-          var s3 = _resp;
-
-          if (!s3.success) {
-            throw new Error();
-          }
-
-          return _this4.fromS3(s3.key.s3accesskey, s3.key.s3secretkey, newAuth);
         });
       }
     }]);
@@ -3547,9 +3596,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref$auth = _ref.auth,
             auth = _ref$auth === void 0 ? newEmptyAuth() : _ref$auth;
 
-        var _this5 = this;
+        var _this3 = this;
 
-        return Promise.resolve().then(function () {
+        return _call(function () {
           if (!screenname && auth.values.screenname) {
             screenname = auth.values.screenname;
           }
@@ -3559,10 +3608,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
               output: "json",
               screenname: screenname
             };
-            return fetchJson("".concat(_this5.API_BASE, "?").concat(paramify(params)));
+            return _await(fetchJson("".concat(_this3.API_BASE, "?").concat(paramify(params))));
           } else {
             throw new Error("Neither screenname or auth provided for bookmarks lookup");
           }
+
+          return _await();
         });
       }
     }, {
@@ -3576,13 +3627,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref2$auth = _ref2.auth,
             auth = _ref2$auth === void 0 ? newEmptyAuth() : _ref2$auth;
 
-        var _this6 = this;
+        var _this4 = this;
 
-        return Promise.resolve().then(function () {
-          return _this6.modify({
+        return _call(function () {
+          return _await(_this4.modify({
             identifier: identifier,
             add_bookmark: 1
-          }, auth);
+          }, auth));
         });
       }
     }, {
@@ -3594,46 +3645,46 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref3$auth = _ref3.auth,
             auth = _ref3$auth === void 0 ? null : _ref3$auth;
 
-        var _this7 = this;
+        var _this5 = this;
 
-        return Promise.resolve().then(function () {
-          return _this7.modify({
+        return _call(function () {
+          return _await(_this5.modify({
             identifier: identifier,
             del_bookmark: identifier
-          }, auth);
+          }, auth));
         });
       }
     }, {
       key: "modify",
       value: function modify(params, auth) {
-        var _this8 = this;
+        var _this6 = this;
 
-        return Promise.resolve().then(function () {
-          return Promise.resolve().then(function () {
-            return iajs.MetadataAPI.get({
+        return _call(function () {
+          var _exit = false;
+          return _await(_continue(_catch(function () {
+            return _await(iajs.MetadataAPI.get({
               identifier: params.identifier,
               path: "/metadata"
+            }), function (mdResponse) {
+              params.title = str2arr(mdResponse.result.title).join(", ");
+              params.mediatype = mdResponse.result.mediatype;
             });
-          }).then(function (_resp) {
-            var mdResponse = _resp;
-            params.title = str2arr(mdResponse.result.title).join(", ");
-            params.mediatype = mdResponse.result.mediatype;
-          })["catch"](function (e) {
+          }, function () {
             throw new Error("Metadata lookup failed for: ".concat(params.identifier));
-          });
-        }).then(function () {
-          params.output = "json";
-          return fetch("".concat(_this8.API_BASE, "?").concat(paramify(params)), {
-            method: "POST",
-            headers: authToHeaderCookies(auth)
-          });
-        }).then(function (_resp) {
-          var response = _resp;
-          return response.json()["catch"](function (e) {
-            return {
-              error: e
-            };
-          });
+          }), function (_result) {
+            if (_exit) return _result;
+            params.output = "json";
+            return _await(fetch("".concat(_this6.API_BASE, "?").concat(paramify(params)), {
+              method: "POST",
+              headers: authToHeaderCookies(auth)
+            }), function (response) {
+              return _await(response.json()["catch"](function (e) {
+                return {
+                  error: e
+                };
+              }));
+            });
+          }));
         });
       }
     }]);
@@ -3655,25 +3706,21 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref4$q = _ref4.q,
             q = _ref4$q === void 0 ? null : _ref4$q;
 
-        var _this9 = this;
+        var _this7 = this;
 
-        return Promise.resolve().then(function () {
-          if (q === null) {
-            return [];
-          } else {
-            return fetchJson("".concat(_this9.API_BASE, "?q=").concat(enc(q)));
-          }
+        return _call(function () {
+          return q === null ? _await([]) : fetchJson("".concat(_this7.API_BASE, "?q=").concat(enc(q)));
         });
       }
     }, {
       key: "search",
       value: function search(q) {
-        var _this10 = this;
+        var _this8 = this;
 
-        return Promise.resolve().then(function () {
-          return _this10.get({
+        return _call(function () {
+          return _await(_this8.get({
             q: q
-          });
+          }));
         });
       }
     }]);
@@ -3700,12 +3747,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref5$auth = _ref5.auth,
             auth = _ref5$auth === void 0 ? newEmptyAuth() : _ref5$auth;
 
-        var _this11 = this;
+        var _this9 = this;
 
-        return Promise.resolve().then(function () {
+        return _call(function () {
           var options = {};
           options.headers = authToHeaderS3(auth);
-          return fetchJson("".concat(_this11.READ_API_BASE, "/").concat(identifier, "/").concat(path), options);
+          return fetchJson("".concat(_this9.READ_API_BASE, "/").concat(identifier, "/").concat(path), options);
         });
       }
     }, {
@@ -3723,9 +3770,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref6$auth = _ref6.auth,
             auth = _ref6$auth === void 0 ? newEmptyAuth() : _ref6$auth;
 
-        var _this12 = this;
+        var _this10 = this;
 
-        return Promise.resolve().then(function () {
+        return _call(function () {
           // https://archive.org/services/docs/api/metadata.html#targets
           var reqParams = {
             "-target": target,
@@ -3734,18 +3781,17 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             secret: auth.values.s3.secret,
             access: auth.values.s3.access
           };
-          var url = "".concat(_this12.WRITE_API_BASE, "/").concat(identifier);
+          var url = "".concat(_this10.WRITE_API_BASE, "/").concat(identifier);
           var body = paramify(reqParams);
-          return fetch(url, {
+          return _await(fetch(url, {
             method: "POST",
             body: body,
             headers: {
               "Content-Type": "application/x-www-form-urlencoded"
             }
+          }), function (response) {
+            return _await(response.json());
           });
-        }).then(function (_resp) {
-          var response = _resp;
-          return response.json();
         });
       }
     }]);
@@ -3767,10 +3813,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref7$identifier = _ref7.identifier,
             identifier = _ref7$identifier === void 0 ? null : _ref7$identifier;
 
-        var _this13 = this;
+        var _this11 = this;
 
-        return Promise.resolve().then(function () {
-          return fetchJson("".concat(_this13.API_BASE, "/get_related/all/").concat(identifier));
+        return _call(function () {
+          return fetchJson("".concat(_this11.API_BASE, "/get_related/all/").concat(identifier));
         });
       }
     }]);
@@ -3793,10 +3839,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref8$identifier = _ref8.identifier,
             identifier = _ref8$identifier === void 0 ? null : _ref8$identifier;
 
-        var _this14 = this;
+        var _this12 = this;
 
-        return Promise.resolve().then(function () {
-          return fetchJson("".concat(_this14.READ_API_BASE, "/").concat(identifier, "/reviews"));
+        return _call(function () {
+          return fetchJson("".concat(_this12.READ_API_BASE, "/").concat(identifier, "/reviews"));
         });
       }
     }, {
@@ -3814,11 +3860,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref9$auth = _ref9.auth,
             auth = _ref9$auth === void 0 ? newEmptyAuth() : _ref9$auth;
 
-        var _this15 = this;
+        var _this13 = this;
 
-        return Promise.resolve().then(function () {
-          var url = "".concat(_this15.WRITE_API_BASE).concat(identifier);
-          return fetch(url, {
+        return _call(function () {
+          var url = "".concat(_this13.WRITE_API_BASE).concat(identifier);
+          return _await(fetch(url, {
             method: "POST",
             body: JSON.stringify({
               title: title,
@@ -3828,10 +3874,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             headers: _objectSpread({
               "Content-Type": "application/json"
             }, authToHeaderS3(auth))
+          }), function (response) {
+            return _await(response.json());
           });
-        }).then(function (_resp) {
-          var response = _resp;
-          return response.json();
         });
       }
     }]);
@@ -3855,17 +3900,17 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref10$auth = _ref10.auth,
             auth = _ref10$auth === void 0 ? newEmptyAuth() : _ref10$auth;
 
-        var _this16 = this;
+        var _this14 = this;
 
-        return Promise.resolve().then(function () {
+        return _call(function () {
           // throw new Error("TODO parse that XML");
           if (!identifier) {
             throw new Error("Missing required args");
           }
 
-          return fetch("".concat(_this16.API_BASE, "/").concat(identifier));
-        }).then(function (_resp) {
-          return _resp.text();
+          return _await(fetch("".concat(_this14.API_BASE, "/").concat(identifier)), function (_fetch) {
+            return _await(_fetch.text());
+          });
         });
       }
     }, {
@@ -3885,10 +3930,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref11$auth = _ref11.auth,
             auth = _ref11$auth === void 0 ? newEmptyAuth() : _ref11$auth;
 
-        var _this17 = this;
+        var _this15 = this;
 
-        return Promise.resolve().then(function () {
-          return _this17.upload({
+        return _call(function () {
+          return _await(_this15.upload({
             identifier: identifier,
             testItem: testItem,
             metadata: metadata,
@@ -3896,7 +3941,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             wait: wait,
             auth: auth,
             autocreate: true
-          });
+          }));
         });
       }
     }, {
@@ -3925,9 +3970,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref12$auth = _ref12.auth,
             auth = _ref12$auth === void 0 ? newEmptyAuth() : _ref12$auth;
 
-        var _this18 = this;
+        var _this16 = this;
 
-        return Promise.resolve().then(function () {
+        return _call(function () {
           if (!identifier) {
             throw new Error("Missing required args");
           }
@@ -3955,27 +4000,20 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           }
 
           requestHeaders["x-archive-keep-old-version"] = keepOldVersions ? 1 : 0;
-          var requestUrl = key ? "".concat(_this18.API_BASE, "/").concat(identifier, "/").concat(key) : "".concat(_this18.API_BASE, "/").concat(identifier);
-          return fetch(requestUrl, {
+          var requestUrl = key ? "".concat(_this16.API_BASE, "/").concat(identifier, "/").concat(key) : "".concat(_this16.API_BASE, "/").concat(identifier);
+          return _await(fetch(requestUrl, {
             method: "PUT",
             headers: requestHeaders,
             body: body
+          }), function (response) {
+            if (response.status !== 200) {
+              // NOTE this may not be the right thing to check.
+              // Maybe different codes are okay
+              throw new Error("Response: ".concat(response.status));
+            }
+
+            return wait ? _await(response.text()) : response;
           });
-        }).then(function (_resp) {
-          var response = _resp;
-
-          if (response.status !== 200) {
-            // NOTE this may not be the right thing to check.
-            // Maybe different codes are okay
-            throw new Error("Response: ".concat(response.status));
-          }
-
-          if (!wait) {
-            return response;
-          } else {
-            // The finished response seems to be empty
-            return response.text();
-          }
         });
       }
     }]);
@@ -4002,15 +4040,15 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             fields = _ref13$fields === void 0 ? ["identifier"] : _ref13$fields,
             options = _objectWithoutProperties(_ref13, ["q", "page", "fields"]);
 
-        var _this19 = this;
+        var _this17 = this;
 
-        return Promise.resolve().then(function () {
+        return _call(function () {
           if (!q) {
             throw new Error("Missing required arg 'q'");
           }
 
           if (_typeof(q) == "object") {
-            q = _this19.buildQueryFromObject(q);
+            q = _this17.buildQueryFromObject(q);
           }
 
           var reqParams = _objectSpread(_objectSpread({
@@ -4022,19 +4060,19 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           });
 
           var encodedParams = paramify(reqParams);
-          var url = "".concat(_this19.API_BASE, "?").concat(encodedParams);
+          var url = "".concat(_this17.API_BASE, "?").concat(encodedParams);
           return fetchJson(url);
         });
       }
     }, {
       key: "search",
       value: function search(q) {
-        var _this20 = this;
+        var _this18 = this;
 
-        return Promise.resolve().then(function () {
-          return _this20.get({
+        return _call(function () {
+          return _await(_this18.get({
             q: q
-          });
+          }));
         });
       }
     }, {
@@ -4075,11 +4113,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref14$identifier = _ref14.identifier,
             identifier = _ref14$identifier === void 0 ? null : _ref14$identifier;
 
-        var _this21 = this;
+        var _this19 = this;
 
-        return Promise.resolve().then(function () {
+        return _call(function () {
           identifier = Array.isArray(identifier) ? identifier.join(",") : identifier;
-          return fetchJson("".concat(_this21.API_BASE, "/").concat(identifier));
+          return fetchJson("".concat(_this19.API_BASE, "/").concat(identifier));
         });
       }
     }]);
@@ -4109,9 +4147,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref15$timestamp = _ref15.timestamp,
             timestamp = _ref15$timestamp === void 0 ? null : _ref15$timestamp;
 
-        var _this22 = this;
+        var _this20 = this;
 
-        return Promise.resolve().then(function () {
+        return _call(function () {
           var params = {
             url: url
           };
@@ -4122,10 +4160,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
           var searchParams = paramify(params);
           var fetchFunction = isInBrowser() ? fetchJsonp : fetch;
-          return fetchFunction("".concat(_this22.AVAILABLE_API_BASE, "?").concat(searchParams));
-        }).then(function (_resp) {
-          var response = _resp;
-          return response.json();
+          return _await(fetchFunction("".concat(_this20.AVAILABLE_API_BASE, "?").concat(searchParams)), function (response) {
+            return _await(response.json());
+          });
         });
       }
       /**
@@ -4137,28 +4174,26 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
       value: function cdx() {
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-        var _this23 = this;
+        var _this21 = this;
 
-        return Promise.resolve().then(function () {
+        return _call(function () {
           options.output = "json";
           var searchParams = paramify(options);
-          return fetch("".concat(_this23.CDX_API_BASE, "?").concat(searchParams));
-        }).then(function (_resp) {
-          var response = _resp;
-          return response.text();
-        }).then(function (_resp) {
-          var raw = _resp;
-          var json;
+          return _await(fetch("".concat(_this21.CDX_API_BASE, "?").concat(searchParams)), function (response) {
+            return _await(response.text(), function (raw) {
+              var json;
 
-          try {
-            json = JSON.parse(raw);
-          } catch (e) {
-            json = {
-              error: raw.trim()
-            };
-          }
+              try {
+                json = JSON.parse(raw);
+              } catch (e) {
+                json = {
+                  error: raw.trim()
+                };
+              }
 
-          return json;
+              return json;
+            });
+          });
         });
       }
       /**
@@ -4184,9 +4219,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             _ref16$auth = _ref16.auth,
             auth = _ref16$auth === void 0 ? newEmptyAuth() : _ref16$auth;
 
-        var _this24 = this;
+        var _this22 = this;
 
-        return Promise.resolve().then(function () {
+        return _call(function () {
           url = url.replace(/^https?\:\/\//, "");
           var params = {
             url: url,
@@ -4200,7 +4235,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             params.if_not_archived_within = ifNotArchivedWithin;
           }
 
-          return fetch(_this24.SAVE_API_BASE, {
+          return _await(fetch(_this22.SAVE_API_BASE, {
             credentials: "omit",
             method: "POST",
             body: paramify(params),
@@ -4208,10 +4243,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
               Accept: "application/json",
               "Content-Type": "application/x-www-form-urlencoded"
             }, authToHeaderS3(auth))
+          }), function (response) {
+            return _await(response.json());
           });
-        }).then(function (_resp) {
-          var response = _resp;
-          return response.json();
         });
       }
     }]);
@@ -4231,70 +4265,65 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
        * List the contents of a zip file in an item
        * Eg: https://archive.org/download/goodytwoshoes00newyiala/goodytwoshoes00newyiala_jp2.zip/
        */
-      value: function ls(identifier, zipPath) {
-        var auth = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : newEmptyAuth();
-        return Promise.resolve().then(function () {
+      value: function ls(identifier, zipPath, auth) {
+        return _call(function () {
+          if (auth === undefined) auth = newEmptyAuth();
+
           if (!zipPath.match(/\.(7z|cbr|cbz|cdr|iso|rar|tar|zip)$/)) {
             throw new Error("Invalid zip type");
           }
 
           var requestUrl = corsWorkAround("https://archive.org/download/".concat(identifier, "/").concat(enc(zipPath), "/"));
-          return fetch(requestUrl, {
+          return _await(fetch(requestUrl, {
             headers: authToHeaderCookies(auth)
-          });
-        }).then(function (_resp) {
-          var response = _resp;
-
-          if (response.status != 200) {
-            throw Error({
-              error: "not found"
-            });
-          }
-
-          return response.text();
-        }).then(function (_resp) {
-          var html = _resp; // This page has <td>'s without closing el tags (took a while to
-          // figure this out). This breaks the DOMparser, so I added a workaround
-          // to add closing tags
-
-          var tableHtml = html.match(/(<table class="archext">[\w\W]*<\/table>)/g)[0];
-          tableHtml = tableHtml.replace(/(<td[^>]*>[\w\W]*?)(?=<(?:td|\/tr))/g, "$1</td>");
-          var table = new DOMParser$2().parseFromString(tableHtml);
-          var rows = table.getElementsByTagName("tr");
-          var results = [];
-
-          var _loop = function _loop(i) {
-            var cells = rows.item(i).getElementsByTagName("td");
-
-            if (cells.length != 4) {
-              return "continue";
+          }), function (response) {
+            if (response.status != 200) {
+              throw Error({
+                error: "not found"
+              });
             }
 
-            try {
-              var a = cells.item(0).getElementsByTagName("a").item(0);
-              results.push({
-                key: a.textContent,
-                href: "https:" + a.getAttribute("href"),
-                jpegUrl: function () {
-                  try {
-                    return "https:" + cells.item(1).getElementsByTagName("a").item(0).getAttribute("href");
-                  } catch (e) {
-                    return null;
-                  }
-                }(),
-                timestamp: cells.item(2).textContent,
-                size: cells.item(3).textContent
-              });
-            } catch (e) {}
-          };
+            return _await(response.text(), function (html) {
+              // This page has <td>'s without closing el tags (took a while to
+              // figure this out). This breaks the DOMparser, so I added a workaround
+              // to add closing tags
+              var tableHtml = html.match(/(<table class="archext">[\w\W]*<\/table>)/g)[0];
+              tableHtml = tableHtml.replace(/(<td[^>]*>[\w\W]*?)(?=<(?:td|\/tr))/g, "$1</td>");
+              var table = new DOMParser$2().parseFromString(tableHtml);
+              var rows = table.getElementsByTagName("tr");
+              var results = [];
 
-          for (var i = 0; i < rows.length; i++) {
-            var _ret = _loop(i);
+              var _loop = function _loop(i) {
+                var cells = rows.item(i).getElementsByTagName("td");
+                if (cells.length != 4) return "continue";
 
-            if (_ret === "continue") continue;
-          }
+                try {
+                  var a = cells.item(0).getElementsByTagName("a").item(0);
+                  results.push({
+                    key: a.textContent,
+                    href: "https:" + a.getAttribute("href"),
+                    jpegUrl: function () {
+                      try {
+                        return "https:" + cells.item(1).getElementsByTagName("a").item(0).getAttribute("href");
+                      } catch (e) {
+                        return null;
+                      }
+                    }(),
+                    timestamp: cells.item(2).textContent,
+                    size: cells.item(3).textContent
+                  });
+                } catch (e) {}
+              };
 
-          return results;
+              for (var i = 0; i < rows.length; i++) {
+                var _ret = _loop(i);
+
+                if (_ret === "continue") continue;
+              }
+
+              return results;
+            });
+          });
         });
       }
     }]);
