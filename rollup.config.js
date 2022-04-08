@@ -6,7 +6,7 @@ import pkg from "./package.json";
 function browser(name) {
   return {
     input: "src/main.js",
-    external: ["node-fetch", "xmldom"],
+    external: ["axios", "xmldom"],
     output: [
       {
         name: "ia",
@@ -34,7 +34,7 @@ function browser(name) {
 function modern(name) {
   return {
     input: "src/main.js",
-    external: ["node-fetch", "xmldom"],
+    external: ["axios", "xmldom"],
     output: [
       {
         name: "ia",

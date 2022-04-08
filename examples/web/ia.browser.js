@@ -1,143 +1,29 @@
+var _excluded = ["q", "page", "fields"];
+
 function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
 
 function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
-
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
 
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 
 (function (global, factory) {
-  (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('node-fetch')) : typeof define === 'function' && define.amd ? define(['node-fetch'], factory) : (global = global || self, global.ia = factory(global.fetch));
-})(this, function (fetch) {
+  (typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('axios')) : typeof define === 'function' && define.amd ? define(['axios'], factory) : (global = global || self, global.ia = factory(global.axios));
+})(this, function (axios) {
   'use strict';
 
-  fetch = fetch && Object.prototype.hasOwnProperty.call(fetch, 'default') ? fetch['default'] : fetch;
-  var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-  function createCommonjsModule(fn, module) {
-    return module = {
-      exports: {}
-    }, fn(module, module.exports), module.exports;
-  }
-
-  var fetchJsonp = createCommonjsModule(function (module, exports) {
-    (function (global, factory) {
-      {
-        factory(exports, module);
-      }
-    })(commonjsGlobal, function (exports, module) {
-      var defaultOptions = {
-        timeout: 5000,
-        jsonpCallback: 'callback',
-        jsonpCallbackFunction: null
-      };
-
-      function generateCallbackFunction() {
-        return 'jsonp_' + Date.now() + '_' + Math.ceil(Math.random() * 100000);
-      }
-
-      function clearFunction(functionName) {
-        // IE8 throws an exception when you try to delete a property on window
-        // http://stackoverflow.com/a/1824228/751089
-        try {
-          delete window[functionName];
-        } catch (e) {
-          window[functionName] = undefined;
-        }
-      }
-
-      function removeScript(scriptId) {
-        var script = document.getElementById(scriptId);
-
-        if (script) {
-          document.getElementsByTagName('head')[0].removeChild(script);
-        }
-      }
-
-      function fetchJsonp(_url) {
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1]; // to avoid param reassign
-
-        var url = _url;
-        var timeout = options.timeout || defaultOptions.timeout;
-        var jsonpCallback = options.jsonpCallback || defaultOptions.jsonpCallback;
-        var timeoutId = undefined;
-        return new Promise(function (resolve, reject) {
-          var callbackFunction = options.jsonpCallbackFunction || generateCallbackFunction();
-          var scriptId = jsonpCallback + '_' + callbackFunction;
-
-          window[callbackFunction] = function (response) {
-            resolve({
-              ok: true,
-              // keep consistent with fetch API
-              json: function json() {
-                return Promise.resolve(response);
-              }
-            });
-            if (timeoutId) clearTimeout(timeoutId);
-            removeScript(scriptId);
-            clearFunction(callbackFunction);
-          }; // Check if the user set their own params, and if not add a ? to start a list of params
-
-
-          url += url.indexOf('?') === -1 ? '?' : '&';
-          var jsonpScript = document.createElement('script');
-          jsonpScript.setAttribute('src', '' + url + jsonpCallback + '=' + callbackFunction);
-
-          if (options.charset) {
-            jsonpScript.setAttribute('charset', options.charset);
-          }
-
-          jsonpScript.id = scriptId;
-          document.getElementsByTagName('head')[0].appendChild(jsonpScript);
-          timeoutId = setTimeout(function () {
-            reject(new Error('JSONP request to ' + _url + ' timed out'));
-            clearFunction(callbackFunction);
-            removeScript(scriptId);
-
-            window[callbackFunction] = function () {
-              clearFunction(callbackFunction);
-            };
-          }, timeout); // Caught if got 404/500
-
-          jsonpScript.onerror = function () {
-            reject(new Error('JSONP request to ' + _url + ' failed'));
-            clearFunction(callbackFunction);
-            removeScript(scriptId);
-            if (timeoutId) clearTimeout(timeoutId);
-          };
-        });
-      } // export as global function
-
-      /*
-      let local;
-      if (typeof global !== 'undefined') {
-        local = global;
-      } else if (typeof self !== 'undefined') {
-        local = self;
-      } else {
-        try {
-          local = Function('return this')();
-        } catch (e) {
-          throw new Error('polyfill failed because global object is unavailable in this environment');
-        }
-      }
-      local.fetchJsonp = fetchJsonp;
-      */
-
-
-      module.exports = fetchJsonp;
-    });
-  });
+  axios = axios && Object.prototype.hasOwnProperty.call(axios, 'default') ? axios['default'] : axios;
   /**
    * "Shallow freezes" an object to render it immutable.
    * Uses `Object.freeze` if available,
@@ -1981,6 +1867,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     NodeList: NodeList_1,
     XMLSerializer: XMLSerializer_1
   };
+
+  function createCommonjsModule(fn, module) {
+    return module = {
+      exports: {}
+    }, fn(module, module.exports), module.exports;
+  }
+
   var entities = createCommonjsModule(function (module, exports) {
     var freeze = conventions.freeze;
     /**
@@ -2568,24 +2461,24 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         case '"':
           if (s === S_EQ || s === S_ATTR //|| s == S_ATTR_SPACE
           ) {
-              //equal
-              if (s === S_ATTR) {
-                errorHandler.warning('attribute value must after "="');
-                attrName = source.slice(start, p);
-              }
+            //equal
+            if (s === S_ATTR) {
+              errorHandler.warning('attribute value must after "="');
+              attrName = source.slice(start, p);
+            }
 
-              start = p + 1;
-              p = source.indexOf(c, start);
+            start = p + 1;
+            p = source.indexOf(c, start);
 
-              if (p > 0) {
-                value = source.slice(start, p).replace(/&#?\w+;/g, entityReplacer);
-                addAttribute(attrName, value, start - 1);
-                s = S_ATTR_END;
-              } else {
-                //fatalError: no end quot match
-                throw new Error('attribute value no end \'' + c + '\' match');
-              }
-            } else if (s == S_ATTR_NOQUOT_VALUE) {
+            if (p > 0) {
+              value = source.slice(start, p).replace(/&#?\w+;/g, entityReplacer);
+              addAttribute(attrName, value, start - 1);
+              s = S_ATTR_END;
+            } else {
+              //fatalError: no end quot match
+              throw new Error('attribute value no end \'' + c + '\' match');
+            }
+          } else if (s == S_ATTR_NOQUOT_VALUE) {
             value = source.slice(start, p).replace(/&#?\w+;/g, entityReplacer); //console.log(attrName,value,start,p)
 
             addAttribute(attrName, value, start); //console.dir(el)
@@ -3403,6 +3296,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return result;
   }
 
+  var enc = encodeURIComponent;
+
   function _call(body, then, direct) {
     if (direct) {
       return then ? then(body()) : body();
@@ -3416,15 +3311,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     }
   }
 
-  var enc = encodeURIComponent;
+  var paramify = function paramify(obj) {
+    return new URLSearchParams(obj).toString();
+  };
 
   function _continue(value, then) {
     return value && value.then ? value.then(then) : then(value);
   }
-
-  var paramify = function paramify(obj) {
-    return new URLSearchParams(obj).toString();
-  };
 
   var str2arr = function str2arr(v) {
     return Array.isArray(v) ? v : [v];
@@ -3443,8 +3336,10 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
   };
 
   var fetchJson = _async(function (url, options) {
-    return _await(fetch(url, options), function (res) {
-      return _await(res.json());
+    return _await(axios(url, _objectSpread({
+      responseType: "json"
+    }, options)), function (res) {
+      return _await(res.data);
     });
   });
 
@@ -3513,14 +3408,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
                 "Content-Type": "application/x-www-form-urlencoded"
               }
             };
-            return _await(fetch("".concat(_this.XAUTH_BASE, "?op=login"), fetchOptions), function (response) {
-              return _await(response.json(), function (data) {
-                if (!data.success) {
-                  data.values = _objectSpread(_objectSpread({}, data.values), newEmptyAuth().values);
-                }
+            return _await(fetchJson("".concat(_this.XAUTH_BASE, "?op=login"), fetchOptions), function (data) {
+              if (!data.success) {
+                data.values = _objectSpread(_objectSpread({}, data.values), newEmptyAuth().values);
+              }
 
-                return data;
-              });
+              return data;
             });
           }, function () {
             // TODO figure out syntax for catching error reponse
@@ -3557,10 +3450,11 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           if (newAuth === undefined) newAuth = newEmptyAuth();
           newAuth.values.cookies["logged-in-sig"] = loggedInSig;
           newAuth.values.cookies["logged-in-user"] = loggedInUser;
-          return _await(fetch(corsWorkAround("https://archive.org/account/s3.php?output_json=1"), {
-            headers: authToHeaderCookies(newAuth)
+          return _await(axios(corsWorkAround("https://archive.org/account/s3.php?output_json=1"), {
+            headers: authToHeaderCookies(newAuth),
+            responseType: "json"
           }), function (s3response) {
-            return _await(s3response.json(), function (s3) {
+            return _await(s3response.data, function (s3) {
               if (!s3.success) {
                 throw new Error();
               }
@@ -3575,9 +3469,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return Auth;
   }();
 
-  var BookReaderAPI = function BookReaderAPI() {
+  var BookReaderAPI = /*#__PURE__*/_createClass(function BookReaderAPI() {
     _classCallCheck(this, BookReaderAPI);
-  };
+  });
 
   var FavoritesAPI = /*#__PURE__*/function () {
     function FavoritesAPI() {
@@ -3674,15 +3568,18 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           }), function (_result) {
             if (_exit) return _result;
             params.output = "json";
-            return _await(fetch("".concat(_this6.API_BASE, "?").concat(paramify(params)), {
+            return _await(axios("".concat(_this6.API_BASE, "?").concat(paramify(params)), {
               method: "POST",
-              headers: authToHeaderCookies(auth)
+              headers: authToHeaderCookies(auth),
+              responseType: "json"
             }), function (response) {
-              return _await(response.json()["catch"](function (e) {
-                return {
-                  error: e
-                };
-              }));
+              return _await(response, function (_response) {
+                return _response.data["catch"](function (e) {
+                  return {
+                    error: e
+                  };
+                });
+              });
             });
           }));
         });
@@ -3783,14 +3680,17 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           };
           var url = "".concat(_this10.WRITE_API_BASE, "/").concat(identifier);
           var body = paramify(reqParams);
-          return _await(fetch(url, {
+          return _await(axios(url, {
             method: "POST",
             body: body,
             headers: {
               "Content-Type": "application/x-www-form-urlencoded"
-            }
+            },
+            responseType: "json"
           }), function (response) {
-            return _await(response.json());
+            return _await(response, function (_response2) {
+              return _response2.data;
+            });
           });
         });
       }
@@ -3864,7 +3764,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
         return _call(function () {
           var url = "".concat(_this13.WRITE_API_BASE).concat(identifier);
-          return _await(fetch(url, {
+          return _await(axios(url, {
             method: "POST",
             body: JSON.stringify({
               title: title,
@@ -3873,9 +3773,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             }),
             headers: _objectSpread({
               "Content-Type": "application/json"
-            }, authToHeaderS3(auth))
+            }, authToHeaderS3(auth)),
+            responseType: "json"
           }), function (response) {
-            return _await(response.json());
+            return _await(response, function (_response3) {
+              return _response3.data;
+            });
           });
         });
       }
@@ -3908,8 +3811,8 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             throw new Error("Missing required args");
           }
 
-          return _await(fetch("".concat(_this14.API_BASE, "/").concat(identifier)), function (_fetch) {
-            return _await(_fetch.text());
+          return _await(axios("".concat(_this14.API_BASE, "/").concat(identifier)), function (_axios) {
+            return _await(_axios.text());
           });
         });
       }
@@ -4001,7 +3904,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
           requestHeaders["x-archive-keep-old-version"] = keepOldVersions ? 1 : 0;
           var requestUrl = key ? "".concat(_this16.API_BASE, "/").concat(identifier, "/").concat(key) : "".concat(_this16.API_BASE, "/").concat(identifier);
-          return _await(fetch(requestUrl, {
+          return _await(axios(requestUrl, {
             method: "PUT",
             headers: requestHeaders,
             body: body
@@ -4038,7 +3941,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             page = _ref13$page === void 0 ? 1 : _ref13$page,
             _ref13$fields = _ref13.fields,
             fields = _ref13$fields === void 0 ? ["identifier"] : _ref13$fields,
-            options = _objectWithoutProperties(_ref13, ["q", "page", "fields"]);
+            options = _objectWithoutProperties(_ref13, _excluded);
 
         var _this17 = this;
 
@@ -4094,9 +3997,9 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
     return SearchAPI;
   }();
 
-  var SearchTextAPI = function SearchTextAPI() {
+  var SearchTextAPI = /*#__PURE__*/_createClass(function SearchTextAPI() {
     _classCallCheck(this, SearchTextAPI);
-  };
+  });
 
   var ViewsAPI = /*#__PURE__*/function () {
     function ViewsAPI() {
@@ -4159,9 +4062,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           }
 
           var searchParams = paramify(params);
-          var fetchFunction = isInBrowser() ? fetchJsonp : fetch;
-          return _await(fetchFunction("".concat(_this20.AVAILABLE_API_BASE, "?").concat(searchParams)), function (response) {
-            return _await(response.json());
+          return _await(axios("".concat(_this20.AVAILABLE_API_BASE, "?").concat(searchParams), {
+            responseType: "json"
+          }), function (response) {
+            return _await(response, function (_response4) {
+              return _response4.data;
+            });
           });
         });
       }
@@ -4179,7 +4085,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
         return _call(function () {
           options.output = "json";
           var searchParams = paramify(options);
-          return _await(fetch("".concat(_this21.CDX_API_BASE, "?").concat(searchParams)), function (response) {
+          return _await(axios("".concat(_this21.CDX_API_BASE, "?").concat(searchParams)), function (response) {
             return _await(response.text(), function (raw) {
               var json;
 
@@ -4235,16 +4141,19 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
             params.if_not_archived_within = ifNotArchivedWithin;
           }
 
-          return _await(fetch(_this22.SAVE_API_BASE, {
+          return _await(axios(_this22.SAVE_API_BASE, {
             credentials: "omit",
             method: "POST",
             body: paramify(params),
             headers: _objectSpread({
               Accept: "application/json",
               "Content-Type": "application/x-www-form-urlencoded"
-            }, authToHeaderS3(auth))
+            }, authToHeaderS3(auth)),
+            responseType: "json"
           }), function (response) {
-            return _await(response.json());
+            return _await(response, function (_response5) {
+              return _response5.data;
+            });
           });
         });
       }
@@ -4260,12 +4169,12 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
 
     _createClass(ZipFileAPI, [{
       key: "ls",
-
+      value:
       /**
        * List the contents of a zip file in an item
        * Eg: https://archive.org/download/goodytwoshoes00newyiala/goodytwoshoes00newyiala_jp2.zip/
        */
-      value: function ls(identifier, zipPath, auth) {
+      function ls(identifier, zipPath, auth) {
         return _call(function () {
           if (auth === undefined) auth = newEmptyAuth();
 
@@ -4274,7 +4183,7 @@ function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "functi
           }
 
           var requestUrl = corsWorkAround("https://archive.org/download/".concat(identifier, "/").concat(enc(zipPath), "/"));
-          return _await(fetch(requestUrl, {
+          return _await(axios(requestUrl, {
             headers: authToHeaderCookies(auth)
           }), function (response) {
             if (response.status != 200) {

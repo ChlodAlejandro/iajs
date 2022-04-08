@@ -1,12 +1,10 @@
-import fetch from "node-fetch";
-import fetchJsonp from "fetch-jsonp";
+import axios from "axios";
 import xmldom from "@xmldom/xmldom";
 
 const DOMParser = xmldom.DOMParser;
 
 let CORS_PROXY = "https://iajs-cors.rchrd2.workers.dev";
 
-const log = console.log;
 const enc = encodeURIComponent;
 const paramify = (obj) => new URLSearchParams(obj).toString();
 const str2arr = (v) => (Array.isArray(v) ? v : [v]);
@@ -24,8 +22,8 @@ const corsWorkAround = (url) => {
 };
 
 const fetchJson = async function (url, options) {
-  const res = await fetch(url, options);
-  return await res.json();
+  const res = await axios(url, { responseType: "json", ...options});
+  return await res.data;
 };
 
 const authToHeaderS3 = function (auth) {
@@ -81,8 +79,7 @@ class Auth {
           "Content-Type": "application/x-www-form-urlencoded",
         },
       };
-      const response = await fetch(`${this.XAUTH_BASE}?op=login`, fetchOptions);
-      const data = await response.json();
+      const data = (await fetchJson(`${this.XAUTH_BASE}?op=login`, fetchOptions));
       if (!data.success) {
         data.values = { ...data.values, ...newEmptyAuth().values };
       }
@@ -109,13 +106,14 @@ class Auth {
   async fromCookies(loggedInSig, loggedInUser, newAuth = newEmptyAuth()) {
     newAuth.values.cookies["logged-in-sig"] = loggedInSig;
     newAuth.values.cookies["logged-in-user"] = loggedInUser;
-    const s3response = await fetch(
+    const s3response = await axios(
       corsWorkAround("https://archive.org/account/s3.php?output_json=1"),
       {
         headers: authToHeaderCookies(newAuth),
+        responseType: "json",
       }
     );
-    const s3 = await s3response.json();
+    const s3 = await s3response.data;
     if (!s3.success) {
       throw new Error();
     }
@@ -162,11 +160,12 @@ class FavoritesAPI {
       throw new Error(`Metadata lookup failed for: ${params.identifier}`);
     }
     params.output = "json";
-    const response = await fetch(`${this.API_BASE}?${paramify(params)}`, {
+    const response = await axios(`${this.API_BASE}?${paramify(params)}`, {
       method: "POST",
       headers: authToHeaderCookies(auth),
+      responseType: "json"
     });
-    return await response.json().catch((e) => {
+    return (await response).data.catch((e) => {
       return { error: e };
     });
   }
@@ -212,14 +211,15 @@ class MetadataAPI {
     };
     const url = `${this.WRITE_API_BASE}/${identifier}`;
     const body = paramify(reqParams);
-    const response = await fetch(url, {
+    const response = await axios(url, {
       method: "POST",
       body,
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
+      responseType: "json"
     });
-    return await response.json();
+    return (await response).data;
   }
 }
 
@@ -250,15 +250,16 @@ class ReviewsAPI {
     auth = newEmptyAuth(),
   } = {}) {
     const url = `${this.WRITE_API_BASE}${identifier}`;
-    const response = await fetch(url, {
+    const response = await axios(url, {
       method: "POST",
       body: JSON.stringify({ title, body, stars }),
       headers: {
         "Content-Type": "application/json",
         ...authToHeaderS3(auth),
       },
+      responseType: "json"
     });
-    return await response.json();
+    return (await response).data;
   }
 }
 
@@ -271,7 +272,7 @@ class S3API {
     if (!identifier) {
       throw new Error("Missing required args");
     }
-    return await (await fetch(`${this.API_BASE}/${identifier}`)).text();
+    return await (await axios(`${this.API_BASE}/${identifier}`)).text();
   }
   async createEmptyItem({
     identifier = null,
@@ -335,7 +336,7 @@ class S3API {
       ? `${this.API_BASE}/${identifier}/${key}`
       : `${this.API_BASE}/${identifier}`;
 
-    const response = await fetch(requestUrl, {
+    const response = await axios(requestUrl, {
       method: "PUT",
       headers: requestHeaders,
       body,
@@ -422,11 +423,11 @@ class WaybackAPI {
       params.timestamp = timestamp;
     }
     const searchParams = paramify(params);
-    const fetchFunction = isInBrowser() ? fetchJsonp : fetch;
-    const response = await fetchFunction(
-      `${this.AVAILABLE_API_BASE}?${searchParams}`
+    const response = await axios(
+      `${this.AVAILABLE_API_BASE}?${searchParams}`,
+        { responseType: "json" }
     );
-    return await response.json();
+    return (await response).data;
   }
   /**
    * @see https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server
@@ -434,7 +435,7 @@ class WaybackAPI {
   async cdx(options = {}) {
     options.output = "json";
     const searchParams = paramify(options);
-    const response = await fetch(`${this.CDX_API_BASE}?${searchParams}`);
+    const response = await axios(`${this.CDX_API_BASE}?${searchParams}`);
     const raw = await response.text();
     let json;
     try {
@@ -456,7 +457,7 @@ class WaybackAPI {
     ifNotArchivedWithin = null,
     auth = newEmptyAuth(),
   } = {}) {
-    url = url.replace(/^https?\:\/\//, "");
+    url = url.replace(/^https?:\/\//, "");
     const params = {
       url,
       capture_outlinks: captureOutlinks,
@@ -467,7 +468,7 @@ class WaybackAPI {
     if (ifNotArchivedWithin) {
       params.if_not_archived_within = ifNotArchivedWithin;
     }
-    const response = await fetch(this.SAVE_API_BASE, {
+    const response = await axios(this.SAVE_API_BASE, {
       credentials: "omit",
       method: "POST",
       body: paramify(params),
@@ -476,8 +477,9 @@ class WaybackAPI {
         "Content-Type": "application/x-www-form-urlencoded",
         ...authToHeaderS3(auth),
       },
+      responseType: "json"
     });
-    return await response.json();
+    return (await response).data;
   }
 }
 
@@ -493,10 +495,10 @@ class ZipFileAPI {
     const requestUrl = corsWorkAround(
       `https://archive.org/download/${identifier}/${enc(zipPath)}/`
     );
-    const response = await fetch(requestUrl, {
+    const response = await axios(requestUrl, {
       headers: authToHeaderCookies(auth),
     });
-    if (response.status != 200) {
+    if (response.status !== 200) {
       throw Error({ error: "not found" });
     }
 
@@ -516,7 +518,7 @@ class ZipFileAPI {
     const results = [];
     for (let i = 0; i < rows.length; i++) {
       let cells = rows.item(i).getElementsByTagName("td");
-      if (cells.length != 4) continue;
+      if (cells.length !== 4) continue;
       try {
         let a = cells.item(0).getElementsByTagName("a").item(0);
         results.push({
