@@ -2,7 +2,7 @@
     "name": "@chlodalejandro/iajs",
     "version": "0.2.7",
     "description": "Internet Archive JavaScript Client",
-    "main": "dist/ia.cjs.js",
+    "main": "dist/ia.esm.js",
     "module": "dist/ia.esm.js",
     "browser": "dist/ia.browser.js",
     "scripts": {
