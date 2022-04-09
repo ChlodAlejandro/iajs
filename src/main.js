@@ -74,7 +74,7 @@ class Auth {
     try {
       const fetchOptions = {
         method: "POST",
-        body: `email=${enc(email)}&password=${enc(password)}`,
+        data: `email=${enc(email)}&password=${enc(password)}`,
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
@@ -213,7 +213,7 @@ class MetadataAPI {
     const body = paramify(reqParams);
     const response = await axios(url, {
       method: "POST",
-      body,
+      data: body,
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
@@ -252,7 +252,7 @@ class ReviewsAPI {
     const url = `${this.WRITE_API_BASE}${identifier}`;
     const response = await axios(url, {
       method: "POST",
-      body: JSON.stringify({ title, body, stars }),
+      data: JSON.stringify({ title, body, stars }),
       headers: {
         "Content-Type": "application/json",
         ...authToHeaderS3(auth),
@@ -272,7 +272,7 @@ class S3API {
     if (!identifier) {
       throw new Error("Missing required args");
     }
-    return await (await axios(`${this.API_BASE}/${identifier}`)).text();
+    return await (await axios(`${this.API_BASE}/${identifier}`, {responseType: "text"})).data;
   }
   async createEmptyItem({
     identifier = null,
@@ -339,7 +339,8 @@ class S3API {
     const response = await axios(requestUrl, {
       method: "PUT",
       headers: requestHeaders,
-      body,
+      data: body,
+      responseType: "text"
     });
 
     if (response.status !== 200) {
@@ -352,7 +353,7 @@ class S3API {
       return response;
     }
     // The finished response seems to be empty
-    return await response.text();
+    return (await response).data;
   }
 }
 
@@ -435,8 +436,8 @@ class WaybackAPI {
   async cdx(options = {}) {
     options.output = "json";
     const searchParams = paramify(options);
-    const response = await axios(`${this.CDX_API_BASE}?${searchParams}`);
-    const raw = await response.text();
+    const response = await axios(`${this.CDX_API_BASE}?${searchParams}`, {responseType: "text"});
+    const raw = (await response).data;
     let json;
     try {
       json = JSON.parse(raw);
@@ -471,7 +472,7 @@ class WaybackAPI {
     const response = await axios(this.SAVE_API_BASE, {
       credentials: "omit",
       method: "POST",
-      body: paramify(params),
+      data: paramify(params),
       headers: {
         Accept: "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
@@ -497,12 +498,13 @@ class ZipFileAPI {
     );
     const response = await axios(requestUrl, {
       headers: authToHeaderCookies(auth),
+      responseType: "text"
     });
     if (response.status !== 200) {
       throw Error({ error: "not found" });
     }
 
-    const html = await response.text();
+    const html = (await response).data;
 
     // This page has <td>'s without closing el tags (took a while to
     // figure this out). This breaks the DOMparser, so I added a workaround
