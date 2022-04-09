@@ -1,5 +1,5 @@
 node_modules
 .cache
 dist
-# examples/web/ia.browser.js
+examples/web/ia.browser.js
 test-config.json
