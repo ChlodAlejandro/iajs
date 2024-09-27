@@ -1,7 +1,7 @@
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import babel, { getBabelOutputPlugin } from "@rollup/plugin-babel";
-import pkg from "./package.json";
+import pkg from "./package.json" with { type: "json" };
 
 function browser(name) {
   return {
